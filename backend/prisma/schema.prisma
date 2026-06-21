@@ -1,0 +1,41 @@
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "binary"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Mint {
+  id            String   @id @default(cuid())
+  tgId          String
+  walletAddress String
+
+  // "phone number" that will be minted
+  number        String
+
+  // one-time text comment the user must include in their payment tx —
+  // this is how the backend matches an incoming on-chain payment to this order
+  comment       String   @unique
+
+  // required payment, in nanoTON (nanoGRAM)
+  amountNano    String
+
+  // status: awaiting_payment -> paid -> confirmed   (or mint_failed)
+  status        String   @default("awaiting_payment")
+
+  txHash        String?  // payment tx hash
+  metaUri       String?  // Pinata metadata URL, once uploaded
+  nftIndex      String?  // index assigned on-chain
+  nftAddress    String?  // deployed NftItem address
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tgId, createdAt])
+  @@index([walletAddress, createdAt])
+  @@index([status])
+}
