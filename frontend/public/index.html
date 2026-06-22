@@ -369,11 +369,42 @@
     }
   }
 
-  // === Mint ===
-  async function mintNumber() {
+  // === Сборка comment-payload без бандлера, через esm.sh ===
+async function buildCommentPayload(comment) {
+  const { beginCell } = await import('https://esm.sh/@ton/core@0.59.0');
+  return beginCell()
+    .storeUint(0, 32)
+    .storeStringTail(comment)
+    .endCell()
+    .toBoc()
+    .toString('base64');
+}
+
+// === Опрос статуса заказа до подтверждения ===
+function pollOrderStatus(orderId, onUpdate) {
+  return new Promise((resolve) => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/mint/order/${orderId}`);
+        const data = await res.json();
+        if (!data.ok) return;
+        onUpdate(data.order);
+        if (data.order.status === 'confirmed' || data.order.status === 'mint_failed') {
+          clearInterval(interval);
+          resolve(data.order);
+        }
+      } catch (e) {
+        console.error('poll error:', e);
+      }
+    }, 4000);
+  });
+}
+
+// === Mint ===
+async function mintNumber() {
+  const btn = document.querySelector('#page-mint button.btn');
   try {
-    const btn = document.querySelector('#page-mint button.btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Minting…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Создаём заказ…'; }
 
     const wallet = tcUi.account;
     if (!wallet?.address) {
@@ -381,33 +412,46 @@
       return;
     }
 
-    const index = Date.now();
-
-    const res = await fetch(`${BACKEND_URL}/api/mint`, {
+    // Шаг 1 — создать заказ на backend
+    const orderRes = await fetch(`${BACKEND_URL}/api/mint/order`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-tg-id': getTgId()
-      },
-      body: JSON.stringify({
-        walletAddress: wallet.address,
-        priceTon: 5
-      })
+      headers: { 'Content-Type': 'application/json', 'x-tg-id': getTgId() },
+      body: JSON.stringify({ walletAddress: wallet.address })
+    });
+    const order = await orderRes.json();
+    if (!orderRes.ok || !order.ok) throw new Error(order?.detail || 'Не удалось создать заказ');
+
+    // Шаг 2 — отправить оплату с комментарием
+    if (btn) btn.textContent = `Подтверди оплату ${order.amountTon} Gram (TON)…`;
+    const payload = await buildCommentPayload(order.comment);
+
+    await tcUi.sendTransaction({
+      validUntil: Math.floor(Date.now() / 1000) + 600,
+      messages: [{
+        address: order.collectionAddress,
+        amount: order.amountNano,
+        payload
+      }]
     });
 
-    const data = await res.json();
+    // Шаг 3 — ждём подтверждения и минта от backend
+    if (btn) btn.textContent = 'Ждём подтверждения сети…';
+    const finalOrder = await pollOrderStatus(order.orderId, (o) => {
+      if (btn && o.status === 'paid') btn.textContent = 'Платёж найден, минтим…';
+    });
 
-    if (!res.ok) throw new Error(data?.detail || 'Mint failed');
-
-    console.log('MINT OK:', data);
-
-    alert(`✅ Minted #${data.number}`);
-
-    document.querySelector('.mint-number').textContent = `#${data.number}`;
+    if (finalOrder.status === 'confirmed') {
+      alert(`✅ Сминчен номер #${finalOrder.number}`);
+      document.querySelector('.mint-number').textContent = `#${finalOrder.number}`;
+    } else {
+      alert('❌ Минт не удался. Заказ сохранён: ' + order.orderId + ' — напиши в поддержку.');
+    }
 
   } catch (e) {
     console.error(e);
-    alert('❌ Mint failed: ' + e.message);
+    alert('❌ Mint failed: ' + (e?.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Mint Number'; }
   }
 }
 
