@@ -94,9 +94,12 @@ async function checkPayments(prisma) {
 
             console.log(`✅ Order ${order.id} → NFT #${result.index} @ ${result.nftAddress}`);
         } catch (e) {
-            console.error(`Order ${order.id}: mint failed —`, e.message);
-            await prisma.mint.update({ where: { id: order.id }, data: { status: 'mint_failed' } }).catch(() => {});
-        }
+    console.error(`Order ${order.id}: mint failed —`, e.message);
+    if (e.response?.data) {
+        console.error('  → response data:', JSON.stringify(e.response.data));
+    }
+    await prisma.mint.update({ where: { id: order.id }, data: { status: 'mint_failed' } }).catch(() => {});
+}
     }
 }
 
