@@ -1,7 +1,7 @@
 // Talks directly to the Collection smart contract using the admin wallet
 // (DEPLOYER_MNEMONIC). This is what actually creates an NFT on-chain, once
 // the backend has confirmed payment and uploaded metadata to Pinata.
-const { TonClient, WalletContractV5R1 } = require('@ton/ton');
+const { TonClient, WalletContractV4 } = require('@ton/ton');
 const { mnemonicToPrivateKey }         = require('@ton/crypto');
 const { Address, beginCell, internal, toNano } = require('@ton/core');
 const { getOpcode } = require('../utils/opcode');
@@ -31,13 +31,13 @@ async function adminWallet() {
             throw new Error('DEPLOYER_MNEMONIC must be exactly 24 words — check backend/.env');
         }
         const keys   = await mnemonicToPrivateKey(words);
-        const wallet = WalletContractV5R1.create({ publicKey: keys.publicKey, workchain: 0 });
+        const wallet = WalletContractV4.create({ publicKey: keys.publicKey, workchain: 0 });
         console.log('🔑 Вычисленный адрес admin-кошелька:', wallet.address.toString());
+        console.log('🔑 Публичный ключ (hex):', keys.publicKey.toString('hex'));
         _walletData = { keys, wallet };
-    }
     return _walletData;
 }
-
+}
 function offchainContentCell(uri) {
     return beginCell().storeUint(0x01, 8).storeStringTail(uri).endCell();
 }
