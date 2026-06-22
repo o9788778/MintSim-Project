@@ -52,7 +52,10 @@ async function checkPayments(prisma) {
         console.error('PaymentWatcher: could not fetch transactions:', e.message);
         return;
     }
-
+console.log('PaymentWatcher: получено транзакций —', txs.length);
+if (txs.length > 0) {
+    console.log('PaymentWatcher: пример in_msg —', JSON.stringify(txs[0].in_msg));
+}
     // Sequential on purpose — keeps Mint index assignment race-free.
     for (const order of pending) {
         const match = txs.find(tx => decodeComment(tx) === order.comment);
