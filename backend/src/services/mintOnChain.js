@@ -91,6 +91,13 @@ async function mintNft({ ownerAddress, metaUri }) {
         throw new Error('Mint transaction did not confirm within 50s — check the admin wallet balance');
     }
 
+    // Реальная проверка: индекс должен увеличиться. Если нет — Mint
+    // не выполнился на стороне Collection (например, неверный опкод).
+    const indexAfter = await getNextItemIndex();
+    if (indexAfter <= index) {
+        throw new Error(`Mint did not take effect on-chain: nextItemIndex still ${indexAfter} (expected > ${index})`);
+    }
+
     const addrRes = await tonClient.runMethod(
         collectionAddr, 'get_nft_address_by_index', [{ type: 'int', value: index }]
     );
