@@ -74,7 +74,16 @@ app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
 try {
     const { checkPayments } = require('../jobs/PaymentWatcher');
     const { prisma }        = require('./db');
-    setInterval(() => checkPayments(prisma).catch(e => console.error('PaymentWatcher error:', e.message)), 15_000);
+
+    let watcherRunning = false;
+    setInterval(() => {
+        if (watcherRunning) return; // предыдущий цикл ещё не закончился — пропускаем
+        watcherRunning = true;
+        checkPayments(prisma)
+            .catch(e => console.error('PaymentWatcher error:', e.message))
+            .finally(() => { watcherRunning = false; });
+    }, 15_000);
+
     console.log('PaymentWatcher started (polling every 15s)');
 } catch (e) {
     console.warn('PaymentWatcher failed to start:', e.message);
