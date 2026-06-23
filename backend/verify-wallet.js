@@ -15,5 +15,5 @@ const MNEMONIC = "festival season multiply term damp nation palace april avocado
 
     console.log('Адрес V4:  ', v4.address.toString());
     console.log('Адрес V5R1:', v5.address.toString());
-    console.log('\nДолжен совпасть с: UQAqr-64cTQ5Vwuv-sdLwPEgHLD0dLQUzg80IhV0X9yUY6RP');
+
 })();

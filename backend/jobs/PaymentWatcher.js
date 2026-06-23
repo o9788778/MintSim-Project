@@ -74,7 +74,7 @@ if (txs.length > 0) {
             const meta = {
                 name: `Number ${order.number}`,
                 description: 'Anonymous number NFT — minted via this app',
-                image: `https://api.dicebear.com/7.x/identicon/svg?seed=${order.number}`,
+                image: `${process.env.BACKEND_PUBLIC_URL}/api/mint/card/${order.number}.png`,
                 attributes: [{ trait_type: 'number', value: order.number }],
             };
             const pinned = await pinJson(meta, `number-${order.number}.json`);

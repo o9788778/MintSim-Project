@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto   = require('crypto');
 const router   = express.Router();
+const { renderCardPng } = require('../utils/cardImage');
 
 const { generateNumber } = require('../utils/generateNumber');
 
@@ -115,5 +116,17 @@ router.get('/meta/:number', (req, res) => {
         attributes: [{ trait_type: 'number', value: number }]
     });
 });
-
+// GET /api/mint/card/:filename — генерирует PNG-карточку с номером
+router.get('/card/:filename', async (req, res) => {
+    try {
+        const number = req.params.filename.replace(/\.png$/i, '');
+        const png = await renderCardPng(number);
+        res.set('Content-Type', 'image/png');
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        res.send(png);
+    } catch (e) {
+        console.error('card render error:', e.message);
+        res.status(500).send('card render failed');
+    }
+});
 module.exports = router;
