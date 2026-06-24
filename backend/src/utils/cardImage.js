@@ -22,7 +22,7 @@ function buildCardSvg(number) {
     const logoSize = size * 0.14;
     const logoX = size - logoSize - size * 0.035;
     const logoY = size * 0.035;
-    const fontSize = size * 0.070;
+    const fontSize = size * 0.090;
     const formatted = formatPhoneNumber(number);
     const borderWidth = size * 0.008;
     const borderColor = 'rgba(255,255,255,0.10)'; // как у тебя на сайте
