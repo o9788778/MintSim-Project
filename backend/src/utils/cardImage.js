@@ -22,9 +22,9 @@ function buildCardSvg(number) {
     const logoSize = size * 0.14;
     const logoX = size - logoSize - size * 0.035;
     const logoY = size * 0.035;
-    const fontSize = size * 0.058;
+    const fontSize = size * 0.060;
     const formatted = formatPhoneNumber(number);
-
+    
     return `
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>
