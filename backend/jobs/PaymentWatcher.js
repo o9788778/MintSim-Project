@@ -5,7 +5,7 @@
 // to avoid two orders racing for the same nextItemIndex.
 const { pinJson }   = require('../src/utils/pinata');
 const { mintNft }   = require('../src/services/mintOnChain');
-
+const { formatPhoneNumber } = require('../src/utils/formatNumber');
 function isTestnet() {
     return (process.env.TON_NETWORK || 'mainnet') === 'testnet';
 }
