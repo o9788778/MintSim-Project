@@ -24,7 +24,8 @@ function buildCardSvg(number) {
     const logoY = size * 0.035;
     const fontSize = size * 0.060;
     const formatted = formatPhoneNumber(number);
-    
+    const borderWidth = size * 0.004;
+    const borderColor = 'rgba(255,255,255,0.10)'; // как у тебя на сайте
     return `
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
   <defs>

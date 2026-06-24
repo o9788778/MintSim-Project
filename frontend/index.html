@@ -356,7 +356,7 @@
       await tcUi.openModal();
     } catch (e) {
       console.error('TonConnect connect error:', e);
-      alert('Не удалось подключить кошелёк');
+      alert('Failed to connect your wallet. Try again.');
     }
   }
 
@@ -404,11 +404,11 @@ function pollOrderStatus(orderId, onUpdate) {
 async function mintNumber() {
   const btn = document.querySelector('#page-mint button.btn');
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Создаём заказ…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Minting nft…'; }
 
     const wallet = tcUi.account;
     if (!wallet?.address) {
-      alert('Подключи кошелёк');
+      alert('Сonnect your wallet');
       return;
     }
 
@@ -419,10 +419,10 @@ async function mintNumber() {
       body: JSON.stringify({ walletAddress: wallet.address })
     });
     const order = await orderRes.json();
-    if (!orderRes.ok || !order.ok) throw new Error(order?.detail || 'Не удалось создать заказ');
+    if (!orderRes.ok || !order.ok) throw new Error(order?.detail || 'Could not create an order');
 
     // Шаг 2 — отправить оплату с комментарием
-    if (btn) btn.textContent = `Подтверди оплату ${order.amountTon} Gram (TON)…`;
+    if (btn) btn.textContent = `Confirm the transaction in your wallet ${order.amountTon} Gram (TON)…`;
     const payload = await buildCommentPayload(order.comment);
 
     await tcUi.sendTransaction({
@@ -435,16 +435,16 @@ async function mintNumber() {
     });
 
     // Шаг 3 — ждём подтверждения и минта от backend
-    if (btn) btn.textContent = 'Ждём подтверждения сети…';
+    if (btn) btn.textContent = 'Waiting for network confirmation…';
     const finalOrder = await pollOrderStatus(order.orderId, (o) => {
-      if (btn && o.status === 'paid') btn.textContent = 'Платёж найден, минтим…';
+      if (btn && o.status === 'paid') btn.textContent = 'Payment found, minting…';
     });
 
     if (finalOrder.status === 'confirmed') {
-      alert(`✅ Сминчен номер #${finalOrder.number}`);
-      document.querySelector('.mint-number').textContent = `#${finalOrder.number}`;
+      alert(`✅ Your number has been successfully minted +999${finalOrder.number}`);
+      document.querySelector('.mint-number').textContent = `+999${finalOrder.number}`;
     } else {
-      alert('❌ Минт не удался. Заказ сохранён: ' + order.orderId + ' — напиши в поддержку.');
+      alert('❌ Mint failed: ' + order.orderId + ' — please contact support.');
     }
 
   } catch (e) {
@@ -483,14 +483,14 @@ async function mintNumber() {
 
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}: ${raw.slice(0,200)}`);
     if (!ctype.includes('application/json')) {
-      console.warn('Пинг вернул не JSON (часто это страница ngrok об ошибке):', raw.slice(0,200));
+      console.warn('The ping did not return JSON:', raw.slice(0,200));
       return;
     }
 
     const data = JSON.parse(raw);
-    console.log('Проверка связи с бэком:', data);
+    console.log('check backend', data);
   } catch (err) {
-    console.error('Связь с бэком не работает:', err?.message || err);
+    console.error('backend is missing:', err?.message || err);
   }
 })();
 
@@ -529,16 +529,16 @@ async function mintNumber() {
     const link = buildReferralLink();
     try {
       if (navigator.share) await navigator.share({ title: 'MintSim Referral', text: 'Join MintSim', url: link });
-      else { await navigator.clipboard.writeText(link); alert('Ссылка скопирована'); }
+      else { await navigator.clipboard.writeText(link); alert('The link is copied✅'); }
     } catch {
-      await navigator.clipboard.writeText(link); alert('Ссылка скопирована');
+      await navigator.clipboard.writeText(link); alert('The link is copied✅');
     }
   }
 
   async function copyReferral() {
     const link = buildReferralLink();
     await navigator.clipboard.writeText(link);
-    alert('Ссылка скопирована');
+    alert('The link is copied✅');
   }
 
   function shortAddr(a){ return a && a.length > 12 ? (a.slice(0,6) + '…' + a.slice(-4)) : (a || ''); }
