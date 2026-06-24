@@ -43,7 +43,7 @@ router.post('/order', async (req, res) => {
 
         const priceTon    = Number(process.env.MINT_PRICE_TON);
         const amountNano  = String(Math.round(priceTon * 1e9));
-        const number      = generateNumber(9);                         // looks like a phone number
+        const number      = generateNumber(8);                         // looks like a phone number
         const comment      = 'mint-' + crypto.randomBytes(4).toString('hex');
 
         const rec = await prisma.mint.create({

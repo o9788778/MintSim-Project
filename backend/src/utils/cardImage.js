@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const { formatPhoneNumber } = require('./formatNumber');
 
 let logoCache = null;
 function getLogoBase64() {
@@ -10,15 +11,9 @@ function getLogoBase64() {
         const buf = fs.readFileSync(logoPath);
         logoCache = `data:image/png;base64,${buf.toString('base64')}`;
     } catch {
-        logoCache = null; // логотипа нет — рисуем без него
+        logoCache = null;
     }
     return logoCache;
-}
-
-// Форматирует 9-значный номер как "+999 XXX XXX XXX"
-function formatNumber(number) {
-    const digits = String(number).padStart(9, '0').slice(0, 9);
-    return `+999 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
 }
 
 function buildCardSvg(number) {
@@ -27,8 +22,8 @@ function buildCardSvg(number) {
     const logoSize = size * 0.14;
     const logoX = size - logoSize - size * 0.035;
     const logoY = size * 0.035;
-    const fontSize = size * 0.062;
-    const formatted = formatNumber(number);
+    const fontSize = size * 0.058;
+    const formatted = formatPhoneNumber(number);
 
     return `
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
@@ -42,11 +37,12 @@ function buildCardSvg(number) {
   <rect width="${size}" height="${size}" fill="#721aff" opacity="0.85" />
 
   ${logo ? `<image href="${logo}" x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}"
+         preserveAspectRatio="xMidYMid slice"
          clip-path="url(#logoClip)" opacity="0.6" />` : ''}
 
-  <text x="${size / 2 + 2}" y="${size * 0.87 + 2}" font-family="sans-serif" font-weight="800"
+  <text x="${size / 2 + 2}" y="${size * 0.87 + 2}" font-family="DejaVu Sans, sans-serif" font-weight="800"
         font-size="${fontSize}" fill="rgba(0,0,0,0.45)" text-anchor="middle" letter-spacing="2">${formatted}</text>
-  <text x="${size / 2}" y="${size * 0.87}" font-family="sans-serif" font-weight="800"
+  <text x="${size / 2}" y="${size * 0.87}" font-family="DejaVu Sans, sans-serif" font-weight="800"
         font-size="${fontSize}" fill="#ffffff" text-anchor="middle" letter-spacing="2">${formatted}</text>
 </svg>`.trim();
 }
