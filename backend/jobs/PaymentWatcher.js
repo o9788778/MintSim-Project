@@ -71,11 +71,12 @@ if (txs.length > 0) {
             await prisma.mint.update({ where: { id: order.id }, data: { status: 'paid', txHash: match.hash } });
 
             // ── Upload metadata to Pinata ────────────────────────────────────
+            const formatted = formatPhoneNumber(order.number);
             const meta = {
-                name: `Number ${order.number}`,
+                name: formatted,
                 description: 'Anonymous number NFT — minted via this app',
                 image: `${process.env.BACKEND_PUBLIC_URL}/api/mint/card/${order.number}.png`,
-                attributes: [{ trait_type: 'number', value: order.number }],
+                attributes: [{ trait_type: 'number', value: formatted }],
             };
             const pinned = await pinJson(meta, `number-${order.number}.json`);
             console.log(`Order ${order.id}: Pinata OK →`, pinned.gatewayUrl);
