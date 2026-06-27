@@ -157,7 +157,25 @@
     .ref-stat-value { display:block; font-weight: 800; font-size: 16px; }
 
     .ref-list-title { margin-top: 18px; margin-bottom: 8px; font-weight: 700; font-size: 14px; color: var(--text-dim); }
-    .ref-list, .numbers-list { display: flex; flex-direction: column; gap: 8px; }
+    .ref-list,
+    .numbers-list { display: flex; flex-direction: column; gap: 8px; }
+    .number-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .number-row-logo {
+      width: 36px;
+      height: 50px;
+      object-fit: contain;
+    }
+    .number-row-text {
+      font-family: "Iosevka", monospace;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: .05em;
+      color: #fff;
+    }
     .ref-item {
       display: flex; justify-content: space-between; align-items: center;
       background: rgba(255,255,255,.06); border: 1px solid var(--border);
@@ -649,9 +667,6 @@ async function mintNumber() {
     }
   }
 
-  // === Номера пользователя (заглушка — подключить к backend позже) ===
-  // TODO: когда будет готов эндпоинт, например GET /api/numbers/:wallet,
-  // он должен возвращать { numbers: [{ number: "00 000 115" }, ...] }
   function renderNumbersList(list) {
     const wrap = document.getElementById('numbersList');
     if (!list || !list.length) {
@@ -659,7 +674,10 @@ async function mintNumber() {
       return;
     }
     wrap.innerHTML = list.map(n => `
-      <div class="ref-item"><span class="mono">+999${n.number}</span></div>
+      <div class="number-row">
+        <img src="/logo.PNG" class="number-row-logo" alt="">
+        <span class="number-row-text">${n.number}</span>
+      </div>
     `).join('');
   }
 

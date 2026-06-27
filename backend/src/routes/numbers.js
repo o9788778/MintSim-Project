@@ -1,19 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const { prisma } = require('../db');
 
+function tonApiBase() {
+    return (process.env.TON_NETWORK === 'testnet') ? 'https://testnet.tonapi.io' : 'https://tonapi.io';
+}
+
+// Достаём 8 цифр номера из метаданных NFT, независимо от того,
+// как именно они были записаны (с +999, без, с дублем и т.п.)
+function extractDigits(item) {
+    const attrs = item?.metadata?.attributes || [];
+    const attr = attrs.find(a => a.trait_type === 'number');
+    const raw = attr?.value || item?.metadata?.name || '';
+    const digitsOnly = String(raw).replace(/\D/g, '');
+    return digitsOnly.slice(-8).padStart(8, '0');
+}
+
+function formatDigits(digits) {
+    return `+999 ${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)}`;
+}
+
+// GET /api/numbers/:wallet — читает NFT именно из ТВОЕЙ коллекции (GETGEMS_COLLECTION),
+// принадлежащие подключённому кошельку, прямо из блокчейна (через TonAPI).
 router.get('/:wallet', async (req, res) => {
-  try {
-    const { wallet } = req.params;
-    const orders = await prisma.order.findMany({
-      where: { walletAddress: wallet, status: 'confirmed' },
-      select: { number: true }
-    });
-    res.json({ ok: true, numbers: orders });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'failed to fetch numbers' });
-  }
+    try {
+        const { wallet } = req.params;
+        const collectionAddr = process.env.GETGEMS_COLLECTION;
+
+        if (!collectionAddr) {
+            return res.status(500).json({ ok: false, error: 'config', detail: 'GETGEMS_COLLECTION not set' });
+        }
+
+        const url = `${tonApiBase()}/v2/accounts/${wallet}/nfts?collection=${collectionAddr}&limit=1000`;
+        const headers = process.env.TONAPI_KEY ? { Authorization: `Bearer ${process.env.TONAPI_KEY}` } : {};
+
+        const r = await fetch(url, { headers });
+        if (!r.ok) throw new Error(`TonAPI ${r.status}: ${await r.text()}`);
+        const data = await r.json();
+
+        const numbers = (data.nft_items || []).map(item => ({
+            number: formatDigits(extractDigits(item)),
+        }));
+
+        res.json({ ok: true, numbers });
+    } catch (e) {
+        console.error('numbers error:', e.message);
+        res.status(500).json({ ok: false, error: 'internal', detail: e.message });
+    }
 });
 
 module.exports = router;
