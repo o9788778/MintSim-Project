@@ -16,42 +16,63 @@ function getLogoBase64() {
     return logoCache;
 }
 
+let fontCache = null;
+function getFontBase64() {
+    if (fontCache !== null) return fontCache;
+    try {
+        const fontPath = path.resolve(__dirname, '..', '..', 'assets', 'Iosevka-Bold.ttf');
+        const buf = fs.readFileSync(fontPath);
+        fontCache = buf.toString('base64');
+    } catch (e) {
+        console.warn('Iosevka font not found, falling back to monospace:', e.message);
+        fontCache = null;
+    }
+    return fontCache;
+}
+
 function buildCardSvg(number) {
     const size = 800;
     const logo = getLogoBase64();
-    const formatted = formatPhoneNumber(number);
+    const fontBase64 = getFontBase64();
+    const formatted = `+999 ${formatPhoneNumber(number)}`; // +999 добавляем здесь, один раз
 
-    // ── Логотип: квадрат сверху-справа, без скругления, cover ──
-    // (как .mint-logo во фронте: width/height 150px на карточке ~430px → ~0.35 от размера)
     const logoSize = size * 0.35;
-    const logoX = size - logoSize - size * 0.056; // отступ 24px на 430px карточке
+    const logoX = size - logoSize - size * 0.056;
     const logoY = size * 0.056;
 
-    // ── Текст: низ-слева, монослейс, три строки как во фронте ──
-    const textLeft = size * 0.051;       // 22px на 430px карточке
+    const textLeft = size * 0.15;
     const captionSize = size * 0.030;
-    const numberSize  = size * 0.102;    // 44px на 430px карточке
-    const bottomY = size - size * 0.042; // 18px отступ снизу
+    const numberSize  = size * 0.102;
+    const bottomY = size - size * 0.042;
+
+    const fontFamily = fontBase64 ? "'Iosevka'" : "'DejaVu Sans Mono', monospace";
 
     return `
 <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-  <!-- фон карточки: rgba(35, 23, 54, 0.89), как в .mint-card -->
-  <rect width="${size}" height="${size}" fill="#231736" fill-opacity="0.89" />
+  <defs>
+    ${fontBase64 ? `
+    <style>
+      @font-face {
+        font-family: 'Iosevka';
+        src: url(data:font/ttf;base64,${fontBase64}) format('truetype');
+        font-weight: 800;
+      }
+    </style>` : ''}
+  </defs>
+
+  <!-- background: rgba(46, 20, 87, 0.89) -->
+  <rect width="${size}" height="${size}" fill="#2e1457" fill-opacity="0.89" />
 
   ${logo ? `<image href="${logo}" x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}"
          preserveAspectRatio="xMidYMid slice" />` : ''}
 
   <!-- caption "MSIM Number" -->
-  <text x="${textLeft}" y="${bottomY}" font-family="sans-serif" font-weight="600"
+  <text x="${textLeft}" y="${bottomY}" font-family="${fontFamily}" font-weight="600"
         font-size="${captionSize}" fill="rgba(255,255,255,0.75)" text-anchor="start" letter-spacing="0.03em">MSIM Number</text>
 
-  <!-- сам номер -->
-  <text x="${textLeft}" y="${bottomY - captionSize * 2.3}" font-family="'DejaVu Sans Mono', monospace" font-weight="800"
+  <!-- ОДНА строка: "+999 XX XXX XXX" -->
+  <text x="${textLeft}" y="${bottomY - captionSize * 2.3}" font-family="${fontFamily}" font-weight="800"
         font-size="${numberSize}" fill="#ffffff" text-anchor="start" letter-spacing="0.05em">${formatted}</text>
-
-  <!-- префикс +999 -->
-  <text x="${textLeft}" y="${bottomY - captionSize * 2.3 - numberSize * 1.15}" font-family="'DejaVu Sans Mono', monospace" font-weight="800"
-        font-size="${numberSize}" fill="#ffffff" text-anchor="start" letter-spacing="0.05em">+999</text>
 </svg>`.trim();
 }
 

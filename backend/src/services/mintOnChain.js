@@ -29,8 +29,8 @@ async function adminWallet() {
         }
         const keys   = await mnemonicToPrivateKey(words);
         const wallet = WalletContractV5R1.create({ publicKey: keys.publicKey, workchain: 0 });
-        console.log('🔑 Вычисленный адрес admin-кошелька:', wallet.address.toString());
-        console.log('🔑 Публичный ключ (hex):', keys.publicKey.toString('hex'));
+        console.log('🔑 Admin wallet key:', wallet.address.toString());
+        console.log('🔑 Public key (hex):', keys.publicKey.toString('hex'));
         _walletData = { keys, wallet };
     }
     return _walletData;

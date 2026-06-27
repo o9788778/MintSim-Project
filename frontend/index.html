@@ -444,6 +444,11 @@ padding:10px;
     const tg = window.Telegram?.WebApp;
     return tg?.initData || '';
   }
+  function formatNumber(raw) {
+  // подгони паттерн под реальную длину/группировку твоего number (тут пример 2-3-3)
+  const digits = String(raw).replace(/\D/g, '');
+  return digits.replace(/(\d{2})(\d{3})(\d{3})/, '$1 $2 $3');
+  }
 
   function getTgId() {
     const tg = window.Telegram?.WebApp;
@@ -592,11 +597,10 @@ async function mintNumber() {
     });
 
     if (finalOrder.status === 'confirmed') {
-      alert(`✅ Your number has been successfully minted +999${finalOrder.number}`);
-      document.getElementById('mintNumberDigits').textContent = finalOrder.number;
-    } else {
-      alert('❌ Mint failed: ' + order.orderId + ' — please contact support.');
-    }
+  const pretty = formatNumber(finalOrder.number);
+  alert(`✅ Your number has been successfully minted +999 ${pretty}`);
+  document.getElementById('mintNumberDigits').textContent = pretty;
+  }
 
   } catch (e) {
     console.error(e);
@@ -756,6 +760,10 @@ async function mintNumber() {
     const link = buildReferralLink();
     await navigator.clipboard.writeText(link);
     alert('The link is copied✅');
+  }
+  function formatNumber(raw) {
+  const digits = String(raw).padStart(8, '0').slice(0, 8);
+  return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)}`;
   }
 
   function shortAddr(a){ return a && a.length > 12 ? (a.slice(0,6) + '…' + a.slice(-4)) : (a || ''); }
