@@ -6,6 +6,7 @@
   <title>MintSim — NFT Minting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/icon.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/iosevka@5.2.6/index.css">
 	<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- TonConnect SDK (если подключаешь в будущем) -->
@@ -55,14 +56,11 @@
       left: 0;
       width: 100%;
       z-index: 20;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       padding: 14px 18px;
-
-      background: var(--glass);
+      background: rgba(35, 23, 54, 0.89);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
     }
@@ -119,23 +117,26 @@
     }
     .mint-number {
       position: absolute; left: 0; right: 0; bottom: 18px;
+      font-family: "Iosevka", monospace;
       padding: 0 22px;
       text-align: left;
     }
     .mint-number-prefix {
       font-weight: 800;
       letter-spacing: .05em;
-      font-size: 20px;
+      font-size:44px;
       line-height: 1.15;
       text-shadow: 0 2px 14px rgba(0,0,0,.45);
+      font-family: "Iosevka", monospace;
     }
     .mint-number-digits {
       font-weight: 800;
       letter-spacing: .05em;
-      font-size: 30px;
+      font-size: 44px;
       line-height: 1.15;
       white-space: nowrap;
       text-shadow: 0 2px 14px rgba(0,0,0,.45);
+      font-family: "Iosevka", monospace;
     }
     .mint-number-caption {
       margin-top: 6px;
@@ -176,7 +177,7 @@
 
     .tabbar {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-      background: rgba(12,12,20,.94);
+      background: rgba(35, 23, 54, 0.89);
       border-top: 1px solid var(--border);
       padding: 12px 20px 16px;
       display: flex; align-items: flex-end; justify-content: space-between;
