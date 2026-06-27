@@ -238,7 +238,7 @@ grid-template-columns:1fr auto 1fr;
 padding:10px;
 }
 .brand{justify-self:start;font-size:20px;}
-.wallet-left{position:static;justify-self:center;display:flex;justify-content:center;flex:1;}
+.wallet-left{justify-self:center;flex:none;width: 100%;text-align: center;}
 .wallet-chip{max-width:140px;overflow:hidden;}
 .wallet-actions{justify-self:end;gap:5px;}
 #disconnectBtn{padding:8px 12px;font-size:13px;}
@@ -246,16 +246,9 @@ padding:10px;
 .dock{width:40px;height:40px;border-radius:50%;}
 .mint-card{width:100%;margin:0 auto;}
 .mint-number-prefix,
-.mint-number-digits {
-  font-size: 28px;
-}
-.mint-number-caption {
-  font-size: 11px;
-}
-.mint-logo {
-  width: 90px;
-  height: 90px;
-}
+.mint-number-digits {font-size: 24px;}
+.mint-number-caption {font-size: 11px;}
+.mint-logo {top: 16px;right: 8px;width: 70px;height: 70px;}
 }
 
   </style>
@@ -293,7 +286,7 @@ padding:10px;
         <div class="minted-line">
           <span id="mintedCount">0</span> numbers already minted
         </div>
-	      <div style="display: flex; justify-content: center; margin-top: 20px;">
+	      <div style="display: flex; justify-content: center; margin-top: 10px;">
     		  <button class="btn btn-mint-big" onclick="mintNumber()">Mint Number</button>
  	      </div>
       </section>
