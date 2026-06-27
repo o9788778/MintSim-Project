@@ -71,7 +71,7 @@ if (txs.length > 0) {
             await prisma.mint.update({ where: { id: order.id }, data: { status: 'paid', txHash: match.hash } });
 
             // ── Upload metadata to Pinata ────────────────────────────────────
-            const formatted = formatPhoneNumber(order.number);
+            const formatted = `+999 ${formatPhoneNumber(order.number)}`;
             const meta = {
                 name: formatted,
                 description: 'Anonymous number NFT — minted via this app',
