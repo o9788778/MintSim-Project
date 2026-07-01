@@ -1,6 +1,6 @@
 const express = require('express');
-const crypto   = require('crypto');
-const router   = express.Router();
+const crypto  = require('crypto');
+const router  = express.Router();
 const { renderCardPng } = require('../utils/cardImage');
 const { generateNumber } = require('../utils/generateNumber');
 const rateLimit = require('express-rate-limit');
@@ -9,21 +9,12 @@ const orderLimiter = rateLimit({ windowMs: 60_000, max: 5 });
 let prisma = null;
 try { ({ prisma } = require('../db')); } catch {}
 
-function toDetail(e) {
-    const ax = e?.response?.data;
-    if (typeof ax === 'string') return ax;
-    if (ax?.detail)  return ax.detail;
-    if (ax?.message) return ax.message;
-    if (ax)           return JSON.stringify(ax);
-    return e?.message || String(e);
-}
-
 // POST /api/mint/order
 router.post('/order', orderLimiter, async (req, res) => {
     try {
         const tgId = req.headers['x-tg-id'] || 'web-user';
-        const { walletAddress } = req.body || {};
         const { walletAddress, ref } = req.body || {};
+
         if (!walletAddress) {
             return res.status(400).json({ ok: false, error: 'bad_request', detail: 'walletAddress required' });
         }
@@ -35,25 +26,13 @@ router.post('/order', orderLimiter, async (req, res) => {
         }
 
         if (!prisma?.mint?.create) {
-            if (ref && prisma?.referral) {
-        const normalRef = String(ref).trim().toLowerCase();
-            const normalWallet = walletAddress.trim().toLowerCase();
-            if (normalRef !== normalWallet) {
-                const exists = await prisma.referral.findUnique({ where: { wallet: normalWallet } });
-                if (!exists) {
-                    await prisma.referral.create({
-                        data: { wallet: normalWallet, referredBy: normalRef }
-                    }).catch(() => {}); // игнорируем если уже есть (race condition safe)
-                }
-            }
-        }
             return res.status(500).json({ ok: false, error: 'config', detail: 'Database not available' });
         }
 
-        const priceTon    = Number(process.env.MINT_PRICE_TON);
-        const amountNano  = String(Math.round(priceTon * 1e9));
-        const number      = generateNumber(8);                         // looks like a phone number
-        const comment      = 'mint-' + crypto.randomBytes(4).toString('hex');
+        const priceTon   = Number(process.env.MINT_PRICE_TON);
+        const amountNano = String(Math.round(priceTon * 1e9));
+        const number     = generateNumber(8);
+        const comment    = 'mint-' + crypto.randomBytes(4).toString('hex');
 
         const rec = await prisma.mint.create({
             data: {
@@ -65,6 +44,20 @@ router.post('/order', orderLimiter, async (req, res) => {
                 status: 'awaiting_payment',
             }
         });
+
+        // Регистрируем реферала если пришёл ref и кошелёк ещё не зарегистрирован
+        if (ref && prisma?.referral) {
+            const normalRef    = String(ref).trim().toLowerCase();
+            const normalWallet = walletAddress.trim().toLowerCase();
+            if (normalRef !== normalWallet) {
+                const exists = await prisma.referral.findUnique({ where: { wallet: normalWallet } });
+                if (!exists) {
+                    await prisma.referral.create({
+                        data: { wallet: normalWallet, referredBy: normalRef }
+                    }).catch(() => {});
+                }
+            }
+        }
 
         return res.json({
             ok: true,
@@ -78,11 +71,11 @@ router.post('/order', orderLimiter, async (req, res) => {
 
     } catch (e) {
         console.error('ORDER ERROR:', e);
-        return res.status(500).json({ ok: false, error: 'internal', detail: toDetail(e) });
+        return res.status(500).json({ ok: false, error: 'internal' });
     }
 });
 
-// GET /api/mint/order/:id 
+// GET /api/mint/order/:id
 router.get('/order/:id', async (req, res) => {
     try {
         if (!prisma?.mint?.findUnique) {
@@ -92,12 +85,11 @@ router.get('/order/:id', async (req, res) => {
         if (!rec) return res.status(404).json({ ok: false, error: 'not_found' });
         return res.json({ ok: true, order: rec });
     } catch (e) {
-        console.error('ORDER ERROR:', e);
-        return res.status(500).json({ ok: false, error: 'internal' }); 
+        return res.status(500).json({ ok: false, error: 'internal' });
     }
 });
 
-// GET /api/mint/my 
+// GET /api/mint/my
 router.get('/my', async (req, res) => {
     try {
         const tgId = req.headers['x-tg-id'];
@@ -110,10 +102,11 @@ router.get('/my', async (req, res) => {
         });
         return res.json({ ok: true, items });
     } catch (e) {
-        return res.status(500).json({ ok: false, error: 'internal', detail: toDetail(e) });
+        return res.status(500).json({ ok: false, error: 'internal' });
     }
 });
 
+// GET /api/mint/meta/:number
 router.get('/meta/:number', (req, res) => {
     const number = req.params.number;
     const backendUrl = process.env.BACKEND_PUBLIC_URL || 'http://localhost:4000';
@@ -124,7 +117,8 @@ router.get('/meta/:number', (req, res) => {
         attributes: [{ trait_type: 'number', value: number }]
     });
 });
-// GENERATING CARD
+
+// GET /api/mint/card/:filename
 router.get('/card/:filename', async (req, res) => {
     try {
         const number = req.params.filename.replace(/\.png$/i, '');
@@ -137,4 +131,5 @@ router.get('/card/:filename', async (req, res) => {
         res.status(500).send('card render failed');
     }
 });
+
 module.exports = router;
