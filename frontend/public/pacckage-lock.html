@@ -34,13 +34,9 @@
         <pre id="mintOutput"></pre>
     </div>
 
-    <script>
-        const baseurl = 'https://api.mintsim.uk/api/admin';
-        //const BACKEND_URL =
-        //window.location.hostname === 'localhost'
-        //    ? 'http://localhost:4000'
-        //    : 'https://api.mintsim.uk';
-        //const MANIFEST_URL = 'https://mintsim.uk/tonconnect-manifest.json';
+   <script>
+        const baseUrl = 'https://api.mintsim.uk/api/admin'; 
+        
         async function loadStats() {
             const secret = document.getElementById('secretKey').value;
             const res = await fetch(`${baseUrl}/stats`, {
