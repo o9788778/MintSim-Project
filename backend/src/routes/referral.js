@@ -100,10 +100,7 @@ router.post('/withdraw', async (req, res) => {
         } catch {
             return res.status(400).json({ ok: false, error: 'invalid_wallet_address' });
         }
-
-        const normalized = normalizeWallet(walletAddress);
-
-      
+ 
         const existingPending = await prisma.withdrawal.findFirst({
             where: { wallet: normalized, status: 'pending' }
         });
