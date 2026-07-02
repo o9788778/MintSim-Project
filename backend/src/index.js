@@ -8,12 +8,14 @@ const app = express();
 
 // CORS
 const EXTRA_ORIGIN = process.env.ALLOWED_ORIGIN;
+const ADMIN_ORIGIN = 'https://mint-sim-project.vercel.app';
 
 function isAllowedOrigin(origin) {
     if (!origin) return true;
     if (origin.includes('localhost')) return true;
     if (origin === 'https://mintsim.uk' || origin === 'https://www.mintsim.uk') return true;
     if (EXTRA_ORIGIN && origin === EXTRA_ORIGIN) return true;
+    if (origin === ADMIN_ORIGIN) return true;
     return false;
 }
 
@@ -24,7 +26,7 @@ app.use((req, res, next) => {
     if (isAllowedOrigin(origin)) {
         res.header('Access-Control-Allow-Origin', origin || '*');
     }
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-tg-id');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-tg-id, x-admin-secret');
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.header('Vary', 'Origin');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
