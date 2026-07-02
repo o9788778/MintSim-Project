@@ -1027,13 +1027,22 @@ async function loadMainPage() {
     try {
         const data = await api(`/api/stats/top${wallet ? '?wallet=' + encodeURIComponent(wallet) : ''}`, { method: 'GET' });
         const topEl = document.getElementById('topList');
-        topEl.innerHTML = (data.top || []).map(r => `
+        
+        topEl.innerHTML = (data.top || []).map(r => {
+          
+            const friendlyAddr = r.wallet 
+                ? TON_CONNECT_UI.toUserFriendlyAddress(r.wallet) 
+                : (r.walletShort || 'Unknown');
+                
+            return `
             <div class="rank-row">
                 <span class="rank-num">#${r.rank}</span>
-                <span class="rank-val mono">${r.walletShort}</span>
+                <span class="rank-val mono" title="${friendlyAddr}">${shortAddr(friendlyAddr)}</span>
                 <span class="rank-sub">${r.count} 🔢</span>
             </div>
-        `).join('');
+            `;
+        }).join('');
+        
         const myRankEl = document.getElementById('myRankRow');
         if (data.myRank && data.myRank.rank > 10) {
             myRankEl.innerHTML = `<div class="rank-row my-rank">
@@ -1043,7 +1052,6 @@ async function loadMainPage() {
             </div>`;
         }
     } catch (e) { console.log('top error', e); }
-
     // BEAUTIFUL
     try {
         const data = await api('/api/stats/beautiful', { method: 'GET' });

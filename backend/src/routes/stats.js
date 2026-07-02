@@ -16,7 +16,7 @@ function beautyScore(number) {
     while (i < digits.length) {
         let run = 1;
         while (i + run < digits.length && digits[i + run] === digits[i]) run++;
-        score += run * run; // длинные серии одинаковых цифр — красивее
+        score += run * run;
         i += run;
     }
     return score;
@@ -32,7 +32,10 @@ function formatNumber(raw) {
     return `+999 ${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 8)}`;
 }
 
-// GET /api/stats/top?wallet=<address>  — топ-10 по кол-ву сминченных номеров
+// GET /api/stats/top?wallet=<address>
+const { Address } = require('@ton/core'); // <--- ДОБАВЬ ЭТО В НАЧАЛО ФАЙЛА, если еще нет
+
+// GET /api/stats/top?wallet=<address>
 router.get('/top', async (req, res) => {
     try {
         if (!prisma?.mint?.findMany) return res.json({ ok: true, top: [], myRank: null });
@@ -44,7 +47,12 @@ router.get('/top', async (req, res) => {
 
         const counts = {};
         for (const m of confirmed) {
-            const w = m.walletAddress.toLowerCase();
+            let w = m.walletAddress;
+            try {
+                w = Address.parse(w.trim()).toRawString();
+            } catch (e) {
+                w = w.trim().toLowerCase(); 
+            }
             counts[w] = (counts[w] || 0) + 1;
         }
 
@@ -52,7 +60,7 @@ router.get('/top', async (req, res) => {
             .sort((a, b) => b[1] - a[1])
             .map(([w, count], i) => ({
                 rank: i + 1,
-                wallet: w,
+                wallet: w, 
                 walletShort: shortWallet(w),
                 count
             }));
@@ -60,9 +68,15 @@ router.get('/top', async (req, res) => {
         const top10 = sorted.slice(0, 10);
 
         let myRank = null;
-        const wallet = req.query.wallet;
-        if (wallet) {
-            const idx = sorted.findIndex(e => e.wallet === wallet.toLowerCase());
+        const reqWallet = req.query.wallet;
+        if (reqWallet) {
+            let searchWallet = reqWallet;
+            try {
+                searchWallet = Address.parse(reqWallet.trim()).toRawString();
+            } catch (e) {
+                searchWallet = searchWallet.trim().toLowerCase();
+            }
+            const idx = sorted.findIndex(e => e.wallet === searchWallet);
             if (idx !== -1) myRank = sorted[idx];
         }
 
@@ -73,7 +87,7 @@ router.get('/top', async (req, res) => {
     }
 });
 
-// GET /api/stats/beautiful  — топ-10 самых красивых номеров
+// GET /api/stats/beautiful
 router.get('/beautiful', async (req, res) => {
     try {
         if (!prisma?.mint?.findMany) return res.json({ ok: true, top: [] });
@@ -99,7 +113,7 @@ router.get('/beautiful', async (req, res) => {
     }
 });
 
-// GET /api/stats/expensive  — топ-10 самых дорогих (текущие листинги на Getgems)
+// GET /api/stats/expensive  
 router.get('/expensive', async (req, res) => {
     try {
         const collectionAddr = process.env.GETGEMS_COLLECTION;

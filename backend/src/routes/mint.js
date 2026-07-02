@@ -45,17 +45,23 @@ router.post('/order', orderLimiter, async (req, res) => {
             }
         });
 
-        // Регистрируем реферала если пришёл ref и кошелёк ещё не зарегистрирован
+        const { Address } = require('@ton/core');
         if (ref && prisma?.referral) {
-            const normalRef    = String(ref).trim().toLowerCase();
-            const normalWallet = walletAddress.trim().toLowerCase();
-            if (normalRef !== normalWallet) {
-                const exists = await prisma.referral.findUnique({ where: { wallet: normalWallet } });
-                if (!exists) {
-                    await prisma.referral.create({
-                        data: { wallet: normalWallet, referredBy: normalRef }
-                    }).catch(() => {});
+            try {
+                
+                const normalRef = Address.parse(String(ref).trim()).toRawString();
+                const normalWallet = Address.parse(String(walletAddress).trim()).toRawString();
+
+                if (normalRef !== normalWallet) {
+                    const exists = await prisma.referral.findUnique({ where: { wallet: normalWallet } });
+                    if (!exists) {
+                        await prisma.referral.create({
+                            data: { wallet: normalWallet, referredBy: normalRef }
+                        }).catch(() => {});
+                    }
                 }
+            } catch (err) {
+                console.warn('Invalid referral address provided, skipping ref saving');
             }
         }
 

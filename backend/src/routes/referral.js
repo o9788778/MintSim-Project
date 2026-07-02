@@ -6,8 +6,14 @@ try { ({ prisma } = require('../db')); } catch {}
 
 const REWARD_PER_MINT_NANO = BigInt(Math.round(0.5 * 1e9)); // 0.5 TON 
 
+const { Address } = require('@ton/core');
+
 function normalizeWallet(addr) {
-    return (addr || '').trim().toLowerCase();
+    try {
+        return Address.parse(String(addr).trim()).toRawString();
+    } catch (e) {
+        return (addr || '').trim();
+    }
 }
 
 function shortWallet(addr) {
@@ -85,11 +91,12 @@ router.post('/withdraw', async (req, res) => {
             return res.status(400).json({ ok: false, error: 'walletAddress_required' });
         }
 
-        //TON-address validation
-        let normalizedWallet;
+        // TON-address validation
+        let normalized;
         try {
+            normalized = normalizeWallet(walletAddress);
             const { Address } = require('@ton/core');
-            normalizedWallet = Address.parse(walletAddress).toString({ bounceable: false });
+            Address.parse(normalized); 
         } catch {
             return res.status(400).json({ ok: false, error: 'invalid_wallet_address' });
         }
