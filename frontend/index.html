@@ -12,7 +12,7 @@
   <script src="https://unpkg.com/@tonconnect/sdk/dist/tonconnect.min.js"></script>
 
   <style>
-    /* ===== MAIN PAGE (TOP / BEAUTIFUL / EXPENSIVE) ===== */
+    /* MAIN PAGE */
   #page-main { display: flex; flex-direction: column; gap: 14px; }
   .main-panels {
     display: flex; gap: 12px; align-items: flex-start;
@@ -37,7 +37,7 @@
   .rank-sub { color: var(--text-dim); font-size: 14px; white-space: nowrap; }
   .rank-row.my-rank { background: rgba(140,110,255,.18); border: 1px solid rgba(140,110,255,.35); }
 
-  /* ===== APPS PAGE ===== */
+  /* APPS PAGE */
   .app-row {
     display: flex; align-items: center; gap: 14px;
     background: rgba(255,255,255,.06); border: 1px solid var(--border);
@@ -51,7 +51,6 @@
   .app-row-title { font-weight: 700; font-size: 14px; }
   .app-row-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
-    /* ===== БАЗА И ФОН ===== */
     :root {
       --glass: rgba(15, 2, 20, 0.64);
       --border: rgba(255,255,255,.10);
@@ -72,7 +71,6 @@
     }
     a { color: inherit; text-decoration: none; }
 
-    /* 🪐 Канвас с частицами */
     #particles {
       position: fixed;
       top: 0;
@@ -87,7 +85,7 @@
       z-index: 1;
     }
 
-    /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
+    /*high panel*/
     header {
       position: sticky;
       top: 0;
@@ -103,8 +101,6 @@
       border-bottom: 1px solid var(--border);
     }
 
-    
-    /* Кнопка логотипа MintSim в шапке */
     #mintsimBtn {
       font-weight: 800; font-size: 18px; padding: 8px 20px; border-radius: 12px;
     }
@@ -133,15 +129,13 @@
       border-radius: 18px;
     }
 
-
-    /* ===== КОНТЕНТНЫЕ СЕКЦИИ ===== */
     main { padding: 18px 14px 140px; width: 100%;}
     .container { max-width: 560px; margin: 0 auto; width: 100%;}
     .container-wide { max-width: 1000px; margin: 0 auto; width: 100%; }
 
     #page-mint { display: flex; flex-direction: column; align-items: center; }
 
-    /* Mint карточка */
+    /* Mint */
     .mint-card {
       position: relative;
       width: 70%;
@@ -331,7 +325,6 @@
     }
     .hidden { display: none !important; }
 
-/* === МОБИЛЬНЫЕ СТИЛИ === */
 @media (max-width:768px){
   header{
     display:grid;
@@ -528,7 +521,7 @@
 
           <div class="main-panel">
             <div class="main-panel-title">💎</div>
-            <div id="beautifulList"><div class="ref-empty" style="font-size:11px">Loading…</div></div>
+            <div id="beautifulList"><div class="ref-empty" style="font-size:14px">Loading…</div></div>
           </div>
 
         </div>
@@ -579,14 +572,14 @@
   </nav>
 
 <script>
-  // === Конфиг ===
+  // config
   const BACKEND_URL =
   window.location.hostname === 'localhost'
     ? 'http://localhost:4000'
     : 'https://api.mintsim.uk';
   const MANIFEST_URL = 'https://mintsim.uk/tonconnect-manifest.json';
 
-  // === TonConnect UI ===
+  // TonConnect UI
   const tcUi = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: MANIFEST_URL,
     actionsConfiguration: {
@@ -606,7 +599,7 @@
     else updateWalletUI('', '');
   });
 
-  // === Telegram auth ===
+  // Telegram auth
   let AUTH = { token: null, user: null };
 
   function getInitData() {
@@ -667,7 +660,7 @@
   }
 }
 
-  // === Универсальный API-коллер к бэку ===
+  // API-caller
   async function api(path, opts = {}) {
     const headers = { 'Content-Type': 'application/json', 'x-tg-id': getTgId(), ...(opts.headers || {}) };
     if (AUTH.token) headers['Authorization'] = `Bearer ${AUTH.token}`;
@@ -681,7 +674,7 @@
     return data ?? {};
   }
 
-  // === Кошелёк ===
+  // wallet
   async function connectWallet() {
     try {
       await tcUi.openModal();
@@ -700,7 +693,7 @@
     }
   }
 
-  // === Сборка comment-payload ===
+  // comment-payload 
 async function buildCommentPayload(comment) {
   const { beginCell } = await import('https://esm.sh/@ton/core@0.59.0');
   return beginCell()
@@ -711,7 +704,7 @@ async function buildCommentPayload(comment) {
     .toString('base64');
 }
 
-// === Опрос статуса ===
+// status
 function pollOrderStatus(orderId, onUpdate) {
   return new Promise((resolve) => {
     const interval = setInterval(async () => {
@@ -731,7 +724,7 @@ function pollOrderStatus(orderId, onUpdate) {
   });
 }
 
-// === Mint ===
+// Mint
 async function mintNumber() {
   const btn = document.querySelector('#page-mint button.btn-mint-big');
   try {
@@ -743,7 +736,7 @@ async function mintNumber() {
       return;
     }
 
-    // Шаг 1 — создать заказ на backend
+    // backend order
     const orderRes = await fetch(`${BACKEND_URL}/api/mint/order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-tg-id': getTgId() },
@@ -752,7 +745,7 @@ async function mintNumber() {
     const order = await orderRes.json();
     if (!orderRes.ok || !order.ok) throw new Error(order?.detail || 'Could not create an order');
 
-    // Шаг 2 — отправить оплату с комментарием
+    // payment
     if (btn) btn.textContent = `Confirm the transaction in your wallet ${order.amountTon} Gram (TON)…`;
     const payload = await buildCommentPayload(order.comment);
 
@@ -765,7 +758,7 @@ async function mintNumber() {
       }]
     });
 
-    // Шаг 3 — ждём подтверждения и минта от backend
+    // mint on backend
     if (btn) btn.textContent = 'Waiting for network confirmation…';
     const finalOrder = await pollOrderStatus(order.orderId, (o) => {
       if (btn && o.status === 'paid') btn.textContent = 'Payment found, minting…';
@@ -785,7 +778,7 @@ async function mintNumber() {
   }
 }
 
-  // === Реферал ===
+  // ref
   const REFERRAL_REWARD_GRAM = 0.5;
 
   function renderReferralList(list) {
@@ -856,7 +849,7 @@ async function mintNumber() {
     }
   }
 
-  // === Boot ===
+  // Boot
   const MINTED_COUNT = 12345;
   document.getElementById('mintedCount').textContent = MINTED_COUNT;
 
@@ -866,7 +859,7 @@ async function mintNumber() {
     await loadReferralFromBackend();
   })();
 
-  // === Проверка связи с бэком ===
+  // connect to backend
   (async () => {
   try {
     const res = await fetch(`${BACKEND_URL}/api/ping`, { cache: 'no-store' });
@@ -886,7 +879,7 @@ async function mintNumber() {
   }
 })();
 
-  // === UI-хелперы/прочее ===
+  // UI helper
   const SITE_URL = 'https://mintsim.uk';
   const TELEGRAM_CHANNEL = 'https://t.me/kurim_blant';
   document.getElementById('tgLink').href = TELEGRAM_CHANNEL;
@@ -981,7 +974,7 @@ async function mintNumber() {
     if (!document.getElementById('page-referral').classList.contains('hidden')) buildReferralLink();
   }
 
-  // Партиклы (фон)
+  // backround
   (function particles() {
     const cvs = document.getElementById('particles');
     const ctx = cvs.getContext('2d');
@@ -1061,20 +1054,7 @@ async function loadMainPage() {
             </div>
         `).join('');
     } catch (e) { console.log('beautiful error', e); }
-
-    // EXPENSIVE
-    try {
-        const data = await api('/api/stats/expensive', { method: 'GET' });
-        document.getElementById('expensiveList').innerHTML = (data.top || []).map((r, i) => `
-            <a class="rank-row" href="${r.getgemsUrl}" target="_blank" rel="noreferrer" style="text-decoration:none;color:inherit">
-                <span class="rank-num">#${i + 1}</span>
-                <span class="rank-val mono" style="font-size:10px">${r.name}</span>
-                <span class="rank-sub">${r.priceTon.toFixed(1)}💎</span>
-            </a>
-        `).join('') || '<div class="ref-empty" style="font-size:11px">No listings yet</div>';
-    } catch (e) { console.log('expensive error', e); }
-}
-
+  }
 </script>
 </body>
 </html>

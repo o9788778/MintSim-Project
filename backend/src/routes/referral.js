@@ -86,7 +86,11 @@ router.post('/withdraw', async (req, res) => {
         }
 
         //TON-address validation
-        if (!/^[A-Za-z0-9_-]{48}$/.test(walletAddress.replace(/^[UE][Qq]?/, ''))) {
+        let normalizedWallet;
+        try {
+            const { Address } = require('@ton/core');
+            normalizedWallet = Address.parse(walletAddress).toString({ bounceable: false });
+        } catch {
             return res.status(400).json({ ok: false, error: 'invalid_wallet_address' });
         }
 
